@@ -1,12 +1,11 @@
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.json.JSONObject;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-
 import java.util.List;
-
 import static io.restassured.RestAssured.given;
 
 /**
@@ -18,13 +17,19 @@ import static io.restassured.RestAssured.given;
  */
 
 public class ApiTest {
-    public static String epsd;
-    public static String lastepsd;
+
+    public static String lastEpisode;
+    public static String lastChar;
+    public static String lastCharEpisode;
+    public static String lastCharLocation;
+    public static String lastCharSpecies;
+    public static String mortySpecies;
+    public static String mortyLocation;
 
     @Tag("1api")
     @Test
     @DisplayName("Последний эпизод с Морти")
-    public void morti() {
+    public void test1() {
         Response response1 = given()
                 .baseUri("https://rickandmortyapi.com")
                 .contentType(ContentType.JSON)
@@ -35,99 +40,63 @@ public class ApiTest {
                 .statusCode(200)
                 .extract()
                 .response();
+
+        String episode;
         List<Object> episodeList = new JSONObject(response1.body().asString()).getJSONArray("episode").toList();
-        epsd = episodeList.get(episodeList.size() - 1).toString();
-        System.out.println("Ссылка на последний эпизод: " + epsd);
-        lastepsd = (epsd.substring(epsd.lastIndexOf("/")).substring(1)).toString();
-        System.out.println("Последний эпизод " + lastepsd);
+        episode = episodeList.get(episodeList.size() - 1).toString();
+        mortyLocation = new JSONObject(response1.body().asString()).getJSONObject("location").getString("name").toString();
+        mortySpecies = new JSONObject(response1.body().asString()).getString("species").toString();
+        System.out.println("Ссылка на последний эпизод: " + episode);
+        lastEpisode = (episode.substring(episode.lastIndexOf("/")).substring(1));
+        System.out.println("Последний эпизод " + lastEpisode);
     }
 
     @Tag("2api")
     @Test
     @DisplayName("Последний персонаж")
-    public void lastPerson() {
-        System.out.println(lastepsd);
+    public void test2() {
         Response response2 = given()
                 .baseUri("https://rickandmortyapi.com")
                 .contentType(ContentType.JSON)
                 .log().all()
                 .when()
-                .get("/api/episode/" + lastepsd)
+                .get("/api/episode/" + lastEpisode)
                 .then()
                 .statusCode(200)
                 .extract()
                 .response();
-        String lastChar;
+
         List<Object> characterList = new JSONObject(response2.body().asString()).getJSONArray("characters").toList();
         lastChar = characterList.get(characterList.size() - 1).toString();
+        lastCharEpisode = lastChar.substring(lastChar.lastIndexOf("/")).substring(1);
         System.out.println("Ссылка на последнего персонажа в последнем эпизоде " + lastChar);
     }
 
-/**
- Response response1 = given()
- .baseUri("https://rickandmortyapi.com/api")
- .when().get("/character/2")
- .then()
- .extract().response();
- String name = new JSONObject(response1.body().asString()).get("name").toString();
- String location1 = new JSONObject(response1.body().asString()).getJSONObject("location").get("name").toString();
- int lst = (new JSONObject(response1.body().asString()).getJSONArray("episode").length() - 1);
- int episode = Integer.parseInt(new JSONObject(response1.body().asString()).getJSONArray("episode").get(lst).toString().replaceAll("[^0-9]", ""));
- System.out.println(name);
- System.out.println(location1);
- System.out.println(episode);
- //Stash.put("q", episode);
+    @Tag("3api")
+    @Test
+    @DisplayName("Местонахожение и раса последнего персонажа")
+    public void test3() {
+        Response response3 = given()
+                .baseUri("https://rickandmortyapi.com")
+                .contentType(ContentType.JSON)
+                .log().all()
+                .when()
+                .get("/api/character/" + lastCharEpisode)
+                .then()
+                .statusCode(200)
+                .extract()
+                .response();
 
- Response response2 = given()
- .baseUri("https://rickandmortyapi.com/api")
- .when()
- .get("/episode/" + episode)
- .then()
- .extract().response();
- int lst1 = (new JSONObject(response2.body().asString()).getJSONArray("characters").length() - 1);
- int character = Integer.parseInt(new JSONObject(response2.body().asString()).getJSONArray("characters").get(lst1).toString().replaceAll("[^0-9]", ""));
- System.out.println(character);
- System.out.println(character);
- */
+        lastCharLocation = new JSONObject(response3.body().asString()).getJSONObject("location").getString("name").toString();
+        lastCharSpecies = new JSONObject(response3.body().asString()).getString("species").toString();
+        System.out.println("Местонахожение последнего персонажа " + lastCharLocation + ", Раса последнего персонажа " + lastCharSpecies);
+    }
 
-
-    /**
-     * @Tag("2api")
-     *     @Test
-     *     @DisplayName("test")
-     *     public void test2() {
-     *         String body = "{\"name\": \"morpheus\",\"job\": \"leader\"}";
-     *
-     *         JSONObject requestBody = new JSONObject();
-     *         requestBody.put("name", "morpheus");
-     *         requestBody.put("job", "leader");
-     *
-     *         Response response3 = given()
-     *                 .baseUri("https://reqres.in/")
-     *                 .contentType("application/json;charset=UTF-8")
-     *                 .log().all()
-     *                 .when()
-     *                 .body(requestBody.toString())
-     *                 .post("/api/users")
-     *                 .then()
-     *                 .statusCode(201)
-     *                 .log().all()
-     *                 .extract().response();
-     *
-     *         JSONObject json = new JSONObject(response3);
-     *         Assertions.assertEquals(json.getString("name"), "morpheus");
-     *         Assertions.assertEquals(json.getString("job"), "leader");
-     *     }
-     */
-
+    @Tag("4api")
+    @Test
+    @DisplayName("Сравнение местонахожения и расы последнего персонажа и Морти")
+    public void test4() {
+        Assertions.assertEquals(lastCharLocation, mortyLocation);
+        Assertions.assertEquals(lastCharSpecies, mortySpecies);
+    }
 }
-
-//    String resp2 = response1.getBody().asString();
-//    JSONObject json = new JSONObject(resp2);
-//    int count = json.getJSONObject("info").getInt("count");
-//    int jsonsize = json.getJSONArray("results").length();
-//    String name = json.getJSONArray("results").getJSONObject(jsonsize-1).getJSONObject("origin").getString("name");
-
-
-
-
