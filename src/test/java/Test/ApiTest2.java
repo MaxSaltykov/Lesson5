@@ -1,9 +1,15 @@
+package Test;
+
+import Settings.ApiAllurePreset;
 import io.restassured.response.Response;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import static io.restassured.RestAssured.given;
 
@@ -25,13 +31,14 @@ import static io.restassured.RestAssured.given;
  * "createdAt": "2021-08-03T10:22:44.071Z"
  * }
  */
+@ExtendWith({ApiAllurePreset.class})
 public class ApiTest2 {
 
-    @Tag("ApiTest2")
+
     @Test
-    @DisplayName("ApiTest2")
-    public void test1() {
-        JSONObject requestBody = new JSONObject();
+
+    public void test11() throws IOException {
+        JSONObject requestBody = new JSONObject(new String(Files.readAllBytes(Paths.get("src/test/resources/json/ApiTest2.json"))));
         requestBody.put("name", "Tomato");
         requestBody.put("job", "Eat maket");
 
